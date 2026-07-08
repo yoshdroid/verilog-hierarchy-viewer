@@ -37,6 +37,7 @@ Configuration:
 - `verilogHierarchy.includePaths`: 予約設定。Phase 3 では未使用。
 - `verilogHierarchy.defines`: 予約設定。Phase 3 では未使用。
 - `verilogHierarchy.maxDepth`: 階層解決の最大深さ。既定値は `100`。
+- `verilogHierarchy.autoRefresh`: 対象 source 変更時に自動 refresh するか。既定値は `true`。
 
 ## Source Layout
 
@@ -214,3 +215,73 @@ Phase 3 時点では、この Codex 実行環境から VS Code GUI の Extension
 5. Command Palette から `Verilog Hierarchy: Select Top Module` を実行する。
 6. Explorer の `HDL Hierarchy` に tree が出ることを確認する。
 7. Tree node を click して該当 source line に移動することを確認する。
+
+## Phase 4 変更履歴
+
+更新日: 2026-07-09
+
+### Auto Refresh
+
+ファイル: `src/extension.ts`, `src/workspace/workspaceIndexer.ts`
+
+TOP module 選択後、対象 source file の create/change/delete を `vscode.workspace.createFileSystemWatcher()` で監視する。`verilogHierarchy.autoRefresh` が `true` の場合、変更検出から 300 ms debounce して hierarchy を再構築する。
+
+Watcher 対象:
+
+- `verilogHierarchy.fileExtensions` から生成した glob。
+- 既定値は `**/*.{v,sv,vh,svh}`。
+
+制限:
+
+- watcher は extension activation 時点の file extension 設定から作る。設定変更後に watcher pattern を反映するには Extension Development Host の再起動が必要。
+- refresh は full rescan であり、incremental index はまだ実装していない。
+
+### Parse Summary And Warnings
+
+ファイル: `src/hierarchy/summary.ts`, `src/extension.ts`
+
+refresh 完了時に Output channel `Verilog Hierarchy` へ summary を出す。
+
+出力項目:
+
+- refresh reason: `manual` または `auto`
+- TOP module
+- scanned file count
+- indexed module count
+- hierarchy node count
+- unresolved node count
+- cycle node count
+- max hierarchy depth
+- elapsed time
+
+warning として以下を出力する。
+
+- duplicate module definition と各定義位置。
+- unresolved module と instance 宣言位置。
+- cycle を検出して展開を止めた位置。
+
+### Tree Item Display
+
+ファイル: `src/views/hierarchyTreeProvider.ts`
+
+Tree item の tooltip に module/instance、状態、source location を表示する。description は以下のいずれかになる。
+
+- `unresolved`
+- `cycle`
+- `<N> child` / `<N> children`
+
+### Phase 4 Tests
+
+追加テスト:
+
+- `summarizeHierarchy counts nodes, unresolved modules, cycles, and depth`
+- `formatIndexWarnings lists duplicate definitions with locations`
+- `formatHierarchyWarnings lists unresolved and cycle nodes`
+
+Phase 4 完了時点の自動テスト結果:
+
+```text
+tests 10
+pass 10
+fail 0
+```

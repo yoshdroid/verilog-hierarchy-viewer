@@ -16,8 +16,8 @@ export class HierarchyTreeItem extends vscode.TreeItem {
       node.children.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None
     );
     this.contextValue = 'hierarchyNode';
-    this.description = node.unresolved ? 'unresolved' : node.cycle ? 'cycle' : undefined;
-    this.tooltip = `${node.instanceName ? `${node.instanceName} : ` : ''}${node.moduleName}`;
+    this.description = getDescription(node);
+    this.tooltip = getTooltip(node);
     this.command = {
       command: 'verilogHierarchy.revealSource',
       title: 'Reveal Source',
@@ -25,6 +25,22 @@ export class HierarchyTreeItem extends vscode.TreeItem {
     };
     this.iconPath = new vscode.ThemeIcon(node.unresolved ? 'warning' : node.cycle ? 'debug-restart' : 'symbol-structure');
   }
+}
+
+function getDescription(node: HierarchyNode): string | undefined {
+  if (node.unresolved) {
+    return 'unresolved';
+  }
+  if (node.cycle) {
+    return 'cycle';
+  }
+  return `${node.children.length} child${node.children.length === 1 ? '' : 'ren'}`;
+}
+
+function getTooltip(node: HierarchyNode): string {
+  const location = node.declaration.uri ? `${node.declaration.uri}:${node.declaration.line + 1}:${node.declaration.character + 1}` : 'no source location';
+  const status = node.unresolved ? 'unresolved module' : node.cycle ? 'cycle stopped' : 'resolved module';
+  return `${node.instanceName ? `${node.instanceName} : ` : ''}${node.moduleName}\n${status}\n${location}`;
 }
 
 export class HierarchyTreeProvider implements vscode.TreeDataProvider<HierarchyTreeItem | vscode.TreeItem> {

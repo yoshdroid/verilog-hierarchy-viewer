@@ -1,17 +1,45 @@
 import * as vscode from 'vscode';
 import { resolveHierarchy } from './hierarchy/resolver';
+import { formatHierarchyWarnings, formatIndexWarnings, summarizeHierarchy } from './hierarchy/summary';
 import { HierarchyTreeItem, HierarchyTreeProvider } from './views/hierarchyTreeProvider';
-import { buildWorkspaceModuleIndex } from './workspace/workspaceIndexer';
+import {
+  buildWorkspaceModuleIndexWithStats,
+  getMaxDepthSetting,
+  getWatcherPattern,
+  shouldAutoRefresh,
+  WorkspaceModuleIndex,
+} from './workspace/workspaceIndexer';
 
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('Verilog Hierarchy');
   const provider = new HierarchyTreeProvider();
   let selectedTopModule: string | undefined;
+  let refreshTimer: NodeJS.Timeout | undefined;
 
   context.subscriptions.push(output);
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('verilogHierarchy.view', provider)
   );
+
+  const watcher = vscode.workspace.createFileSystemWatcher(getWatcherPattern());
+  const scheduleRefresh = () => {
+    const topModuleName = selectedTopModule;
+    if (!topModuleName || !shouldAutoRefresh()) {
+      return;
+    }
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+    }
+    refreshTimer = setTimeout(() => {
+      refreshHierarchy(provider, output, topModuleName, undefined, 'auto').catch((error: unknown) => {
+        output.appendLine(`Auto refresh failed: ${formatError(error)}`);
+      });
+    }, 300);
+  };
+  context.subscriptions.push(watcher);
+  context.subscriptions.push(watcher.onDidCreate(scheduleRefresh));
+  context.subscriptions.push(watcher.onDidChange(scheduleRefresh));
+  context.subscriptions.push(watcher.onDidDelete(scheduleRefresh));
 
   context.subscriptions.push(
     vscode.commands.registerCommand('verilogHierarchy.selectTopModule', async (item?: HierarchyTreeItem) => {
@@ -22,8 +50,8 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
 
-      const index = await buildWorkspaceModuleIndex();
-      const moduleNames = [...index.modules.keys()].sort();
+      const workspaceIndex = await buildWorkspaceModuleIndexWithStats();
+      const moduleNames = [...workspaceIndex.index.modules.keys()].sort();
       if (moduleNames.length === 0) {
         provider.setMessage('No Verilog/SystemVerilog modules found in this workspace.');
         vscode.window.showWarningMessage('Verilog Hierarchy: no modules found.');
@@ -39,7 +67,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       selectedTopModule = picked;
-      await refreshHierarchy(provider, output, selectedTopModule, index);
+      await refreshHierarchy(provider, output, selectedTopModule, workspaceIndex);
     })
   );
 
@@ -74,7 +102,8 @@ async function refreshHierarchy(
   provider: HierarchyTreeProvider,
   output: vscode.OutputChannel,
   topModuleName: string,
-  existingIndex?: Awaited<ReturnType<typeof buildWorkspaceModuleIndex>>
+  existingIndex?: WorkspaceModuleIndex,
+  reason: 'manual' | 'auto' = 'manual'
 ): Promise<void> {
   await vscode.window.withProgress(
     {
@@ -83,8 +112,9 @@ async function refreshHierarchy(
       cancellable: false,
     },
     async () => {
-      const index = existingIndex ?? (await buildWorkspaceModuleIndex());
-      const hierarchy = resolveHierarchy(index, topModuleName, getMaxDepth());
+      const startedAt = Date.now();
+      const workspaceIndex = existingIndex ?? (await buildWorkspaceModuleIndexWithStats());
+      const hierarchy = resolveHierarchy(workspaceIndex.index, topModuleName, getMaxDepthSetting());
       if (!hierarchy) {
         provider.setMessage(`Top module not found: ${topModuleName}`);
         vscode.window.showWarningMessage(`Verilog Hierarchy: top module not found: ${topModuleName}`);
@@ -92,9 +122,7 @@ async function refreshHierarchy(
       }
 
       provider.setHierarchy(hierarchy);
-      output.appendLine(
-        `Indexed ${index.modules.size} modules. Duplicate module names: ${index.duplicates.size}. Top: ${topModuleName}.`
-      );
+      logRefreshResult(output, workspaceIndex, hierarchy, topModuleName, reason, Date.now() - startedAt);
     }
   );
 }
@@ -109,6 +137,42 @@ async function revealSource(location: { uri: string; line: number; character: nu
   });
 }
 
-function getMaxDepth(): number {
-  return vscode.workspace.getConfiguration('verilogHierarchy').get<number>('maxDepth', 100);
+function logRefreshResult(
+  output: vscode.OutputChannel,
+  workspaceIndex: WorkspaceModuleIndex,
+  hierarchy: NonNullable<ReturnType<typeof resolveHierarchy>>,
+  topModuleName: string,
+  reason: 'manual' | 'auto',
+  elapsedMs: number
+): void {
+  const summary = summarizeHierarchy(hierarchy);
+  output.appendLine(
+    [
+      `Refresh (${reason}) complete.`,
+      `Top: ${topModuleName}.`,
+      `Files: ${workspaceIndex.fileCount}.`,
+      `Modules: ${workspaceIndex.index.modules.size}.`,
+      `Nodes: ${summary.totalNodes}.`,
+      `Unresolved: ${summary.unresolvedNodes}.`,
+      `Cycles: ${summary.cycleNodes}.`,
+      `Max depth: ${summary.maxDepth}.`,
+      `Elapsed: ${elapsedMs} ms.`,
+    ].join(' ')
+  );
+
+  const warnings = [
+    ...formatIndexWarnings(workspaceIndex.index),
+    ...formatHierarchyWarnings(hierarchy),
+  ];
+
+  for (const warning of warnings) {
+    output.appendLine(`Warning: ${warning}`);
+  }
+}
+
+function formatError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 }

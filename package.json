@@ -73,6 +73,11 @@
           "default": 100,
           "minimum": 1,
           "description": "Maximum hierarchy depth to resolve."
+        },
+        "verilogHierarchy.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh the hierarchy when Verilog HDL/SystemVerilog source files change."
         }
       }
     },
