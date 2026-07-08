@@ -4,19 +4,14 @@
     {
       "label": "npm: compile",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "command": "cmd.exe",
       "args": [
-        "run",
-        "compile"
+        "/d",
+        "/c",
+        "set \"PATH=C:\\Program Files\\nodejs;%PATH%\" && \"C:\\Program Files\\nodejs\\npm.cmd\" run compile"
       ],
-      "options": {
-        "env": {
-          "PATH": "C:\\Program Files\\nodejs;${env:PATH}"
-        }
-      },
       "group": "build",
       "problemMatcher": "$tsc"
     }
   ]
 }
-
