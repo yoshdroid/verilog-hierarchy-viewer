@@ -23,6 +23,7 @@ Activation:
 Commands:
 
 - `verilogHierarchy.selectTopModule`: TOP module を Quick Pick で選択する。Tree node context から呼ばれた場合は、その node の module を TOP として再解決する。
+- `verilogHierarchy.setAsTopModule`: `HDL Hierarchy` の tree node を右クリックし、その node の module を TOP として再解決する。
 - `verilogHierarchy.refresh`: 現在選択中の TOP module で workspace を再走査し、Tree View を更新する。
 - `verilogHierarchy.revealSource`: Tree node の source location を開く。
 
@@ -167,6 +168,12 @@ Tree label:
 3. module 名を Quick Pick に表示する。
 4. 選択された module を `selectedTopModule` に保存する。
 5. hierarchy を解決して Tree View に渡す。
+
+`verilogHierarchy.setAsTopModule`:
+
+1. `HDL Hierarchy` の tree item context menu から実行する。
+2. 対象 item の `node.moduleName` を `selectedTopModule` に保存する。
+3. workspace を再 scan し、その module を TOP として hierarchy を再解決する。
 
 `verilogHierarchy.refresh`:
 

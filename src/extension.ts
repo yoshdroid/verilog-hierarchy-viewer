@@ -45,8 +45,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('verilogHierarchy.selectTopModule', async (item?: HierarchyTreeItem) => {
       output.appendLine('Select Top Module command invoked.');
       if (item) {
-        selectedTopModule = item.node.moduleName;
-        await refreshHierarchy(provider, output, selectedTopModule);
+        selectedTopModule = await setTopModuleFromTreeItem(provider, output, item);
         return;
       }
 
@@ -68,6 +67,17 @@ export function activate(context: vscode.ExtensionContext): void {
 
       selectedTopModule = picked;
       await refreshHierarchy(provider, output, selectedTopModule, workspaceIndex);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('verilogHierarchy.setAsTopModule', async (item?: HierarchyTreeItem) => {
+      output.appendLine('Set as Top Module command invoked.');
+      if (!item) {
+        vscode.window.showInformationMessage('Verilog Hierarchy: no hierarchy node selected.');
+        return;
+      }
+      selectedTopModule = await setTopModuleFromTreeItem(provider, output, item);
     })
   );
 
@@ -135,6 +145,16 @@ async function revealSource(location: { uri: string; line: number; character: nu
     selection: new vscode.Range(position, position),
     preview: false,
   });
+}
+
+async function setTopModuleFromTreeItem(
+  provider: HierarchyTreeProvider,
+  output: vscode.OutputChannel,
+  item: HierarchyTreeItem
+): Promise<string> {
+  const topModuleName = item.node.moduleName;
+  await refreshHierarchy(provider, output, topModuleName);
+  return topModuleName;
 }
 
 function logRefreshResult(

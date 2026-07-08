@@ -40,7 +40,7 @@ npm run package
 This creates a file like:
 
 ```text
-verilog-hierarchy-viewer-0.0.1.vsix
+verilog-hierarchy-viewer-<version>.vsix
 ```
 
 ## Install from VSIX
@@ -50,13 +50,13 @@ In VS Code:
 1. Open Extensions.
 2. Select `...`.
 3. Select `Install from VSIX...`.
-4. Choose `verilog-hierarchy-viewer-0.0.1.vsix`.
+4. Choose `verilog-hierarchy-viewer-<version>.vsix`.
 5. Open a workspace that contains Verilog HDL/SystemVerilog source files.
 
 Command line alternative:
 
 ```powershell
-code --install-extension .\verilog-hierarchy-viewer-0.0.1.vsix
+code --install-extension .\verilog-hierarchy-viewer-<version>.vsix
 ```
 
 ## Use
@@ -82,4 +82,3 @@ code --install-extension .\verilog-hierarchy-viewer-0.0.1.vsix
 - Macro-generated module or instance names are not resolved.
 - Complex SystemVerilog elaboration is not performed.
 - Multiple instances in one declaration are not fully handled.
-
