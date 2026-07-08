@@ -18,10 +18,13 @@ Extension entry point:
 
 Activation events:
 
+- `*`
 - `onCommand:verilogHierarchy.selectTopModule`
 - `onCommand:verilogHierarchy.refresh`
 - `onCommand:verilogHierarchy.revealSource`
 - `onView:verilogHierarchy.view`
+
+Phase 3 の手動確認中、command contribution は見えるが command handler が未登録になる症状を切り分けるため、開発中は `*` activation も有効にしている。Extension Host 起動直後に `activate()` が呼ばれ、`Verilog Hierarchy Viewer extension activated.` が Extension Host log に出る。
 
 Commands:
 

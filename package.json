@@ -12,6 +12,7 @@
     "Other"
   ],
   "activationEvents": [
+    "*",
     "onCommand:verilogHierarchy.selectTopModule",
     "onCommand:verilogHierarchy.refresh",
     "onCommand:verilogHierarchy.revealSource",

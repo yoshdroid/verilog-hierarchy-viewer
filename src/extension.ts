@@ -4,6 +4,7 @@ import { HierarchyTreeItem, HierarchyTreeProvider } from './views/hierarchyTreeP
 import { buildWorkspaceModuleIndex } from './workspace/workspaceIndexer';
 
 export function activate(context: vscode.ExtensionContext): void {
+  console.log('Verilog Hierarchy Viewer extension activated.');
   const output = vscode.window.createOutputChannel('Verilog Hierarchy');
   const provider = new HierarchyTreeProvider();
   let selectedTopModule: string | undefined;
