@@ -3,12 +3,12 @@
   "tasks": [
     {
       "label": "npm: compile",
-      "type": "shell",
-      "command": "cmd.exe",
+      "type": "process",
+      "command": "C:\\Progra~1\\nodejs\\node.exe",
       "args": [
-        "/d",
-        "/c",
-        "set \"PATH=C:\\Program Files\\nodejs;%PATH%\" && \"C:\\Program Files\\nodejs\\npm.cmd\" run compile"
+        "${workspaceFolder}\\node_modules\\typescript\\bin\\tsc",
+        "-p",
+        "${workspaceFolder}"
       ],
       "group": "build",
       "problemMatcher": "$tsc"
