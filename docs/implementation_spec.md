@@ -16,15 +16,9 @@ Extension entry point:
 
 - `main`: `./out/src/extension.js`
 
-Activation events:
+Activation:
 
-- `*`
-- `onCommand:verilogHierarchy.selectTopModule`
-- `onCommand:verilogHierarchy.refresh`
-- `onCommand:verilogHierarchy.revealSource`
-- `onView:verilogHierarchy.view`
-
-Phase 3 の手動確認中、command contribution は見えるが command handler が未登録になる症状を切り分けるため、開発中は `*` activation も有効にしている。Extension Host 起動直後に `activate()` が呼ばれ、`Verilog Hierarchy Viewer extension activated.` が Extension Host log に出る。
+- VS Code 1.95 では command/view contributions から activation event が自動生成されるため、`package.json` に明示的な `activationEvents` は置かない。
 
 Commands:
 

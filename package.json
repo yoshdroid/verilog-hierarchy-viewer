@@ -11,13 +11,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "*",
-    "onCommand:verilogHierarchy.selectTopModule",
-    "onCommand:verilogHierarchy.refresh",
-    "onCommand:verilogHierarchy.revealSource",
-    "onView:verilogHierarchy.view"
-  ],
   "main": "./out/src/extension.js",
   "contributes": {
     "commands": [
