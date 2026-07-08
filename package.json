@@ -1,0 +1,77 @@
+{
+  "name": "verilog-hierarchy-viewer",
+  "displayName": "Verilog Hierarchy Viewer",
+  "description": "Inspect Verilog HDL/SystemVerilog module hierarchy from VS Code.",
+  "version": "0.0.1",
+  "publisher": "yoshdroid",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "verilogHierarchy.selectTopModule",
+        "title": "Verilog Hierarchy: Select Top Module"
+      },
+      {
+        "command": "verilogHierarchy.refresh",
+        "title": "Verilog Hierarchy: Refresh"
+      },
+      {
+        "command": "verilogHierarchy.revealSource",
+        "title": "Verilog Hierarchy: Reveal Source"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "verilogHierarchy.view",
+          "name": "HDL Hierarchy"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "verilogHierarchy.selectTopModule",
+          "when": "view == verilogHierarchy.view",
+          "group": "navigation"
+        },
+        {
+          "command": "verilogHierarchy.refresh",
+          "when": "view == verilogHierarchy.view",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "verilogHierarchy.revealSource",
+          "when": "view == verilogHierarchy.view && viewItem == hierarchyNode",
+          "group": "inline"
+        },
+        {
+          "command": "verilogHierarchy.selectTopModule",
+          "when": "view == verilogHierarchy.view && viewItem == hierarchyNode",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test out/test/**/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.95.0",
+    "typescript": "^5.9.0"
+  }
+}
+
