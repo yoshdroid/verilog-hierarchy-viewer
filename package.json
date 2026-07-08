@@ -121,11 +121,11 @@
     }
   },
   "scripts": {
-    "compile": "C:\\Progra~1\\nodejs\\node.exe ./node_modules/typescript/bin/tsc -p ./",
-    "watch": "C:\\Progra~1\\nodejs\\node.exe ./node_modules/typescript/bin/tsc -watch -p ./",
-    "test": "C:\\Progra~1\\nodejs\\node.exe ./node_modules/typescript/bin/tsc -p ./ && C:\\Progra~1\\nodejs\\node.exe --test out/test/**/*.test.js",
-    "vscode:prepublish": "C:\\Progra~1\\nodejs\\node.exe ./node_modules/typescript/bin/tsc -p ./",
-    "package": "set PATH=C:\\Progra~1\\nodejs;%PATH%&& C:\\Progra~1\\nodejs\\node.exe ./node_modules/@vscode/vsce/vsce package"
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test out/test/**/*.test.js",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

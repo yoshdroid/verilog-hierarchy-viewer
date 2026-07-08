@@ -184,9 +184,10 @@ Tree label:
 テスト実行:
 
 ```powershell
-$env:Path="C:\Program Files\nodejs;" + $env:Path
-& "C:\Program Files\nodejs\npm.cmd" test
+npm test
 ```
+
+PowerShell の execution policy により `npm.ps1` が blocked される環境では `npm.cmd test` を使う。
 
 Phase 3 時点のテスト:
 

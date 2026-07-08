@@ -13,12 +13,20 @@ VS Code extension for inspecting Verilog HDL/SystemVerilog module hierarchy.
 
 ## Build
 
-On this Windows development environment, use `npm.cmd` explicitly:
+Install Node.js LTS first. Then run:
 
 ```powershell
-cd C:\Users\yoshd\Documents\develop\verilog-hierarchy-viewer
-& "C:\Program Files\nodejs\npm.cmd" install
-& "C:\Program Files\nodejs\npm.cmd" test
+git clone https://github.com/yoshdroid/verilog-hierarchy-viewer.git
+cd verilog-hierarchy-viewer
+npm install
+npm test
+```
+
+On PowerShell environments where `npm.ps1` is blocked by execution policy, call `npm.cmd` instead:
+
+```powershell
+npm.cmd install
+npm.cmd test
 ```
 
 ## Create a VSIX
@@ -26,8 +34,7 @@ cd C:\Users\yoshd\Documents\develop\verilog-hierarchy-viewer
 The project includes `@vscode/vsce` as a dev dependency.
 
 ```powershell
-cd C:\Users\yoshd\Documents\develop\verilog-hierarchy-viewer
-& "C:\Program Files\nodejs\npm.cmd" run package
+npm run package
 ```
 
 This creates a file like:

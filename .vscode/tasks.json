@@ -3,13 +3,8 @@
   "tasks": [
     {
       "label": "npm: compile",
-      "type": "process",
-      "command": "C:\\Progra~1\\nodejs\\node.exe",
-      "args": [
-        "${workspaceFolder}\\node_modules\\typescript\\bin\\tsc",
-        "-p",
-        "${workspaceFolder}"
-      ],
+      "type": "npm",
+      "script": "compile",
       "group": "build",
       "problemMatcher": "$tsc"
     }
