@@ -16,6 +16,13 @@ Extension entry point:
 
 - `main`: `./out/extension.js`
 
+Activation events:
+
+- `onCommand:verilogHierarchy.selectTopModule`
+- `onCommand:verilogHierarchy.refresh`
+- `onCommand:verilogHierarchy.revealSource`
+- `onView:verilogHierarchy.view`
+
 Commands:
 
 - `verilogHierarchy.selectTopModule`: TOP module を Quick Pick で選択する。Tree node context から呼ばれた場合は、その node の module を TOP として再解決する。
@@ -210,4 +217,3 @@ Phase 3 時点では、この Codex 実行環境から VS Code GUI の Extension
 5. Command Palette から `Verilog Hierarchy: Select Top Module` を実行する。
 6. Explorer の `HDL Hierarchy` に tree が出ることを確認する。
 7. Tree node を click して該当 source line に移動することを確認する。
-
