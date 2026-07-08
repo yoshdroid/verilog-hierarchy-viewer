@@ -213,6 +213,33 @@ Fixture examples:
 - duplicate module definition。
 - intentionally unresolved child。
 
+## 開発運用ルール
+
+各 phase は、実装、テスト、確認、コミットを 1 セットとして進める。phase の途中で大きな変更を分ける必要がある場合も、動く単位、または判断を残す単位で小さくコミットする。
+
+基本手順:
+
+1. phase の対象範囲を確認する。
+2. 先に fixture とテストを追加、または既存テストを更新する。
+3. 実装する。
+4. unit test と必要な integration test を実行する。
+5. 手動確認が必要な VS Code UI については、確認手順と結果を記録する。
+6. phase の完了条件を満たしたらコミットする。
+
+コミット方針:
+
+- Phase 1 以降は、各 phase の完了時に必ずコミットする。
+- テスト追加と実装が密接な場合は同一コミットでよい。
+- 仕様変更、設計判断、テスト fixture の追加は、後で追跡できる commit message にする。
+- phase 完了時の最終報告には、実行したテスト、手動確認、コミット hash を含める。
+
+実装仕様ドキュメント:
+
+- Phase 3 完了時点で `docs/implementation_spec.md` を新規作成する。
+- Phase 3 までに実装した拡張機能の構成、command、Tree View、parser/indexer/resolver、データモデル、既知の制限を記録する。
+- Phase 4 と Phase 5 では、実装変更や追加仕様が発生するたびに `docs/implementation_spec.md` へ追記してからコミットする。
+- 実装仕様は「現在の実装の正」を示すドキュメントとし、計画書と食い違う場合は実装仕様を優先して更新する。
+
 ## 開発フェーズ
 
 ### Phase 0: リポジトリ準備
@@ -224,6 +251,7 @@ Fixture examples:
 完了条件:
 
 - git repository と計画書が存在する。
+- 初回コミットが存在する。
 
 ### Phase 1: Extension skeleton
 
@@ -231,12 +259,15 @@ Fixture examples:
 - `Select Top Module` と `Refresh` command を登録する。
 - 空の Tree View を表示する。
 - extension host で起動できることを確認する。
+- skeleton のテストまたは compile check を追加、実行する。
 
 完了条件:
 
 - F5 で Extension Development Host が起動する。
 - Command Palette に command が出る。
 - Tree View が表示される。
+- 自動テストまたは compile check が通る。
+- Phase 1 完了コミットが存在する。
 
 ### Phase 2: Parser MVP
 
@@ -248,16 +279,23 @@ Fixture examples:
 
 - `top -> child -> grandchild` が fixture から解決できる。
 - unresolved/cycle の最低限の扱いがテスト済み。
+- parser/indexer/resolver の unit test が通る。
+- Phase 2 完了コミットが存在する。
 
 ### Phase 3: Tree integration
 
 - Quick Pick で TOP module を選択する。
 - TreeDataProvider で階層を表示する。
 - ノード click で instance declaration line へジャンプする。
+- VS Code integration test または TreeDataProvider のテストを追加する。
+- Phase 3 完了時点の実装仕様を `docs/implementation_spec.md` に記録する。
 
 完了条件:
 
 - 実 RTL workspace で TOP 選択、ツリー表示、ジャンプができる。
+- 自動テストと必要な手動確認が完了している。
+- `docs/implementation_spec.md` が存在し、Phase 3 時点の実装内容が記録されている。
+- Phase 3 完了コミットが存在する。
 
 ### Phase 4: Usability hardening
 
@@ -265,21 +303,31 @@ Fixture examples:
 - output channel に parse summary/warnings を出す。
 - duplicate definitions、unresolved modules を見やすく表示する。
 - 大きめの workspace で性能を測る。
+- 変更ごとにテストを追加、更新する。
+- 実装変更と追加仕様を `docs/implementation_spec.md` に追記する。
 
 完了条件:
 
 - 数百ファイル規模で操作が数秒以内に収まる。
 - 解析失敗が UI 全体を壊さない。
+- 関連テストが通る。
+- `docs/implementation_spec.md` が Phase 4 の変更を反映している。
+- Phase 4 完了コミットが存在する。
 
 ### Phase 5: Parser upgrade evaluation
 
 - tree-sitter-verilog、slang、Surelog などの採用可能性を比較する。
 - Windows/VS Code extension への導入負荷を評価する。
 - 軽量 parser 継続か外部 parser 連携かを判断する。
+- parser 実装を変更する場合は、既存 fixture に加えて回帰テストを追加する。
+- 評価結果と実装変更を `docs/implementation_spec.md` に追記する。
 
 完了条件:
 
 - parser 技術選定メモを残し、次の精度改善の道筋が決まる。
+- parser 変更がある場合は関連テストが通る。
+- `docs/implementation_spec.md` が Phase 5 の判断と変更を反映している。
+- Phase 5 完了コミットが存在する。
 
 ## リスクと対策
 
@@ -301,4 +349,3 @@ Fixture examples:
 ## 判断メモ
 
 最初から Language Server にしない。解析器は VS Code 非依存の TypeScript module として作り、将来的な LSP 化に備える。今回必要な主機能は workspace scan、tree display、source reveal であり、Tree View API と command API だけで MVP を構成できる。
-
