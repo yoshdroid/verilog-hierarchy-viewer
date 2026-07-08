@@ -285,3 +285,39 @@ tests 10
 pass 10
 fail 0
 ```
+
+## Phase 5 変更履歴
+
+更新日: 2026-07-09
+
+### Parser Upgrade Evaluation
+
+ファイル: `docs/parser_evaluation.md`
+
+SystemVerilog parser 候補として以下を評価した。
+
+- tree-sitter-verilog
+- slang
+- Surelog
+- Verible
+
+判断:
+
+- Phase 5 では external parser への置き換えは行わない。
+- 現行の built-in lightweight parser を継続する。
+- 次に parser 精度が必要になった場合、Verible JSON syntax tree adapter を第一候補、slang JSON AST adapter を第二候補として prototype する。
+- Surelog は本格 elaboration/UHDM 連携が必要になるまで採用しない。
+
+実装変更:
+
+- runtime code の parser backend は変更していない。
+- parser 評価メモを追加した。
+- この実装仕様に Phase 5 の判断を追記した。
+
+Phase 5 完了時点の自動テスト結果:
+
+```text
+tests 10
+pass 10
+fail 0
+```
