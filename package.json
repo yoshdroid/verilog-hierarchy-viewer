@@ -28,6 +28,55 @@
         "title": "Verilog Hierarchy: Reveal Source"
       }
     ],
+    "configuration": {
+      "title": "Verilog Hierarchy",
+      "properties": {
+        "verilogHierarchy.fileExtensions": {
+          "type": "array",
+          "default": [
+            ".v",
+            ".sv",
+            ".vh",
+            ".svh"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "File extensions to scan for Verilog HDL/SystemVerilog sources."
+        },
+        "verilogHierarchy.exclude": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/out/**"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Glob patterns excluded from hierarchy scanning."
+        },
+        "verilogHierarchy.includePaths": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Reserved for future include path support."
+        },
+        "verilogHierarchy.defines": {
+          "type": "object",
+          "default": {},
+          "description": "Reserved for future preprocessor define support."
+        },
+        "verilogHierarchy.maxDepth": {
+          "type": "number",
+          "default": 100,
+          "minimum": 1,
+          "description": "Maximum hierarchy depth to resolve."
+        }
+      }
+    },
     "views": {
       "explorer": [
         {
@@ -74,4 +123,3 @@
     "typescript": "^5.9.0"
   }
 }
-
