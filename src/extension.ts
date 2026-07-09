@@ -9,6 +9,7 @@ import {
   shouldAutoRefresh,
   WorkspaceModuleIndex,
 } from './workspace/workspaceIndexer';
+import { getModuleNamesDeclaredInUri } from './workspace/moduleSelection';
 
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('Verilog Hierarchy');
@@ -42,10 +43,18 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(watcher.onDidDelete(scheduleRefresh));
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('verilogHierarchy.selectTopModule', async (item?: HierarchyTreeItem) => {
+    vscode.commands.registerCommand('verilogHierarchy.selectTopModule', async (itemOrUri?: HierarchyTreeItem | vscode.Uri) => {
       output.appendLine('Select Top Module command invoked.');
-      if (item) {
-        selectedTopModule = await setTopModuleFromTreeItem(provider, output, item);
+      if (itemOrUri instanceof vscode.Uri) {
+        const topModuleName = await selectTopModuleFromExplorerUri(provider, output, itemOrUri);
+        if (topModuleName) {
+          selectedTopModule = topModuleName;
+        }
+        return;
+      }
+
+      if (itemOrUri) {
+        selectedTopModule = await setTopModuleFromTreeItem(provider, output, itemOrUri);
         return;
       }
 
@@ -106,6 +115,34 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {
   // No extension resources need explicit disposal beyond context subscriptions.
+}
+
+async function selectTopModuleFromExplorerUri(
+  provider: HierarchyTreeProvider,
+  output: vscode.OutputChannel,
+  uri: vscode.Uri
+): Promise<string | undefined> {
+  const workspaceIndex = await buildWorkspaceModuleIndexWithStats();
+  const moduleNames = getModuleNamesDeclaredInUri(workspaceIndex.index, uri.toString());
+
+  if (moduleNames.length === 0) {
+    vscode.window.showWarningMessage(`Verilog Hierarchy: no modules found in ${uri.fsPath}.`);
+    return undefined;
+  }
+
+  const picked = moduleNames.length === 1
+    ? moduleNames[0]
+    : await vscode.window.showQuickPick(moduleNames, {
+        title: 'Select TOP module',
+        placeHolder: 'TOP module in selected file',
+      });
+
+  if (!picked) {
+    return undefined;
+  }
+
+  await refreshHierarchy(provider, output, picked, workspaceIndex);
+  return picked;
 }
 
 async function refreshHierarchy(

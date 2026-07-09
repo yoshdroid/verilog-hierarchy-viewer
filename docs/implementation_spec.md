@@ -419,3 +419,38 @@ tests 16
 pass 16
 fail 0
 ```
+
+## 0.0.4 変更履歴
+
+更新日: 2026-07-09
+
+### Explorer File Context Menu
+
+ファイル: `package.json`, `src/extension.ts`, `src/workspace/moduleSelection.ts`
+
+Explorer 上の RTL ファイル右クリックから `Verilog Hierarchy: Select Top Module` を実行できるようにした。
+
+対象拡張子:
+
+- `.v`
+- `.sv`
+- `.vh`
+- `.svh`
+
+挙動:
+
+1. Explorer context menu から command が呼ばれると、VS Code から対象 file の `vscode.Uri` が command argument として渡される。
+2. workspace 全体を scan して module index を作る。
+3. 対象 file URI と一致する declaration を持つ module 名だけを候補にする。
+4. 候補が 1 件の場合は Quick Pick を出さず、その module を TOP として hierarchy を表示する。
+5. 候補が複数ある場合は、対象 file 内の module だけを Quick Pick に表示する。
+6. 候補が 0 件の場合は warning message を出し、現在の tree は変更しない。
+
+通常の Command Palette から `Verilog Hierarchy: Select Top Module` を呼ぶ場合は、従来通り workspace 全体の module を候補にする。`HDL Hierarchy` tree item から呼ぶ場合も従来通り対象 node を TOP として再解決する。
+
+### 0.0.4 Tests
+
+追加テスト:
+
+- `getModuleNamesDeclaredInUri returns sorted modules declared in the selected file`
+- `getModuleNamesDeclaredInUri returns an empty list when the selected file has no modules`

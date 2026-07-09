@@ -2,7 +2,7 @@
   "name": "verilog-hierarchy-viewer",
   "displayName": "Verilog Hierarchy Viewer",
   "description": "Inspect Verilog HDL/SystemVerilog module hierarchy from VS Code.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "yoshdroid",
   "license": "MIT",
   "repository": {
@@ -119,6 +119,13 @@
         {
           "command": "verilogHierarchy.setAsTopModule",
           "when": "view == verilogHierarchy.view && viewItem == hierarchyNode",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "verilogHierarchy.selectTopModule",
+          "when": "resourceExtname == .v || resourceExtname == .sv || resourceExtname == .vh || resourceExtname == .svh",
           "group": "navigation"
         }
       ]

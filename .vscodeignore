@@ -10,3 +10,7 @@ out/test/**
 *.vsix
 tsconfig.json
 package-lock.json
+*.v
+*.sv
+*.vh
+*.svh

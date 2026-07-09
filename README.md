@@ -6,6 +6,7 @@ VS Code extension for inspecting Verilog HDL/SystemVerilog module hierarchy.
 
 - Scan `.v`, `.sv`, `.vh`, and `.svh` files in the current workspace.
 - Select a TOP module from detected module definitions.
+- Select a TOP module from the Explorer file context menu for RTL files.
 - Show the instantiated hierarchy in Explorer as `HDL Hierarchy`.
 - Jump from each module or instance node to the corresponding source line.
 - Refresh manually or automatically when source files change.
@@ -68,6 +69,8 @@ code --install-extension .\verilog-hierarchy-viewer-<version>.vsix
 3. Choose the TOP module.
 4. Open Explorer and find `HDL Hierarchy`.
 5. Click a tree node to jump to the module or instance declaration.
+
+You can also right-click a `.v`, `.sv`, `.vh`, or `.svh` file in Explorer and run `Verilog Hierarchy: Select Top Module`. If the file declares one module, it is selected immediately. If it declares multiple modules, only those modules are shown as candidates.
 
 ## Settings
 

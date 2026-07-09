@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.4] - 2026-07-09
+
+### Added
+
+- Add `Verilog Hierarchy: Select Top Module` to the Explorer file context menu for `.v`, `.sv`, `.vh`, and `.svh` files.
+- When invoked from an RTL file, limit TOP module candidates to modules declared in that file.
+- Automatically select the TOP module when the selected RTL file declares exactly one module.
+
 ## [0.0.3] - 2026-07-09
 
 ### Added
