@@ -49,6 +49,42 @@ endmodule
   assert.equal(modules[0].instances[0].instanceName, 'u_child');
 });
 
+test('parseModules does not treat compact control statements as instances', () => {
+  const text = `
+module top;
+  if(foo) begin
+  end
+  for(i = 0; i < 4; i = i + 1) begin
+  end
+  case(foo)
+    1'b0: foo = 1'b1;
+  endcase
+  assert(foo);
+  assert property (foo);
+  assume property (foo);
+  cover property (foo);
+  restrict property (foo);
+endmodule
+`;
+
+  const modules = parseModules(text, 'file:///control.sv');
+  assert.equal(modules[0].instances.length, 0);
+});
+
+test('parseModules still detects compact parameterized instances', () => {
+  const text = `
+module top;
+  child#(.WIDTH(8))u_child(.clk(clk));
+endmodule
+`;
+
+  const modules = parseModules(text, 'file:///parameterized.sv');
+  assert.deepEqual(
+    modules[0].instances.map((instance) => [instance.moduleName, instance.instanceName, instance.parameterized]),
+    [['child', 'u_child', true]]
+  );
+});
+
 test('buildModuleIndex tracks duplicate module definitions', () => {
   const index = buildModuleIndex([
     { uri: 'file:///a.sv', text: 'module dup; endmodule' },
@@ -88,4 +124,3 @@ endmodule
   assert.equal(hierarchy.children[1].unresolved, true);
   assert.equal(hierarchy.children[1].moduleName, 'missing');
 });
-

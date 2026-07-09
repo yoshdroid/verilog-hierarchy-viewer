@@ -329,3 +329,36 @@ tests 10
 pass 10
 fail 0
 ```
+
+## 0.0.2 変更履歴
+
+更新日: 2026-07-09
+
+### Set As Top Module Context Command
+
+ファイル: `package.json`, `src/extension.ts`
+
+`HDL Hierarchy` の tree node 右クリックから `Verilog Hierarchy: Set as Top Module` を実行できるようにした。対象 node の `moduleName` を TOP として workspace を再 scan し、hierarchy を再解決する。
+
+### Parser False Positive Hardening
+
+ファイル: `src/hierarchy/parser.ts`, `test/hierarchy.test.ts`
+
+`picorv32.v` で `if`, `for`, `case`, `assert`, `restrict property` などが module instance として誤検出される問題を修正した。
+
+原因:
+
+- 旧 parser は instance 宣言検出で module 名と instance 名の間の空白を必須にしていなかった。
+- そのため `if(` を `moduleName=i`, `instanceName=f` のように単語分割して誤検出していた。
+
+修正:
+
+- parameterized instance と plain instance の検出 regex を分離した。
+- plain instance では module 名と instance 名の間に空白を必須にした。
+- `assert`, `assume`, `cover`, `restrict`, `reg`, `wire`, `logic`, `integer`, `parameter`, `localparam`, `genvar`, port direction などの HDL keyword を instance 除外対象に追加した。
+- `if(foo)`, `for(...)`, `case(...)`, `assert(...)`, `assert property (...)`, `restrict property (...)` の回帰テストを追加した。
+
+確認:
+
+- `picorv32.v` の false positive は解消し、実インスタンスのみ検出されることを確認した。
+- 自動テストは 12 件に増加した。

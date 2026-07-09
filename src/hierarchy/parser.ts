@@ -6,33 +6,62 @@ type CommentMaskState = {
 
 const MODULE_DECLARATION_PATTERN = /\bmodule\s+([A-Za-z_][A-Za-z0-9_$]*)\b/g;
 const END_MODULE_PATTERN = /\bendmodule\b/g;
-const INSTANCE_DECLARATION_PATTERN =
-  /^\s*([A-Za-z_][A-Za-z0-9_$]*)\s*(#\s*\((?:[^()]|\([^()]*\))*\)\s*)?([A-Za-z_][A-Za-z0-9_$]*)\s*(?:\[[^\]]+\]\s*)?\(/;
+const PARAMETERIZED_INSTANCE_DECLARATION_PATTERN =
+  /^\s*([A-Za-z_][A-Za-z0-9_$]*)\s*#\s*\((?:[^()]|\([^()]*\))*\)\s*([A-Za-z_][A-Za-z0-9_$]*)\s*(?:\[[^\]]+\]\s*)?\(/;
+const PLAIN_INSTANCE_DECLARATION_PATTERN =
+  /^\s*([A-Za-z_][A-Za-z0-9_$]*)\s+([A-Za-z_][A-Za-z0-9_$]*)\s*(?:\[[^\]]+\]\s*)?\(/;
 
 const NON_INSTANCE_KEYWORDS = new Set([
   'assign',
+  'assert',
   'always',
   'always_comb',
   'always_ff',
   'always_latch',
+  'assume',
   'begin',
   'case',
+  'class',
+  'cover',
   'covergroup',
   'else',
   'end',
+  'endcase',
+  'endclass',
+  'endfunction',
+  'endgenerate',
+  'endmodule',
+  'endpackage',
+  'endprogram',
+  'endproperty',
+  'endsequence',
+  'endtask',
   'for',
   'foreach',
   'function',
   'generate',
+  'genvar',
   'if',
+  'import',
+  'inout',
+  'input',
+  'integer',
   'initial',
   'interface',
+  'localparam',
+  'logic',
   'module',
+  'output',
   'package',
+  'parameter',
   'program',
   'property',
+  'reg',
+  'restrict',
+  'sequence',
   'task',
   'typedef',
+  'wire',
 ]);
 
 export function parseModules(text: string, uri: string): ModuleDefinition[] {
@@ -131,21 +160,50 @@ function parseInstances(body: string, uri: string, fullText: string, bodyOffset:
   let offset = bodyOffset;
 
   for (const line of lines) {
-    const match = INSTANCE_DECLARATION_PATTERN.exec(line);
-    if (match && !NON_INSTANCE_KEYWORDS.has(match[1])) {
-      const moduleName = match[1];
-      const instanceName = match[3];
+    const parsed = parseInstanceLine(line);
+    if (parsed && !NON_INSTANCE_KEYWORDS.has(parsed.moduleName)) {
       instances.push({
-        moduleName,
-        instanceName,
-        declaration: offsetToLocation(fullText, uri, offset + match.index + line.indexOf(moduleName)),
-        parameterized: Boolean(match[2]),
+        moduleName: parsed.moduleName,
+        instanceName: parsed.instanceName,
+        declaration: offsetToLocation(fullText, uri, offset + parsed.moduleOffset),
+        parameterized: parsed.parameterized,
       });
     }
     offset += line.length + 1;
   }
 
   return instances;
+}
+
+function parseInstanceLine(line: string):
+  | {
+      moduleName: string;
+      instanceName: string;
+      moduleOffset: number;
+      parameterized: boolean;
+    }
+  | undefined {
+  const parameterizedMatch = PARAMETERIZED_INSTANCE_DECLARATION_PATTERN.exec(line);
+  if (parameterizedMatch) {
+    return {
+      moduleName: parameterizedMatch[1],
+      instanceName: parameterizedMatch[2],
+      moduleOffset: parameterizedMatch.index + line.indexOf(parameterizedMatch[1]),
+      parameterized: true,
+    };
+  }
+
+  const plainMatch = PLAIN_INSTANCE_DECLARATION_PATTERN.exec(line);
+  if (!plainMatch) {
+    return undefined;
+  }
+
+  return {
+    moduleName: plainMatch[1],
+    instanceName: plainMatch[2],
+    moduleOffset: plainMatch.index + line.indexOf(plainMatch[1]),
+    parameterized: false,
+  };
 }
 
 function offsetToLocation(text: string, uri: string, offset: number): SourceLocation {
@@ -157,4 +215,3 @@ function offsetToLocation(text: string, uri: string, offset: number): SourceLoca
     character: lines[lines.length - 1].length,
   };
 }
-
