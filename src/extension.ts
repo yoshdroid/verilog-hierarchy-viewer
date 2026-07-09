@@ -181,6 +181,7 @@ function logRefreshResult(
   );
 
   const warnings = [
+    ...workspaceIndex.warnings,
     ...formatIndexWarnings(workspaceIndex.index),
     ...formatHierarchyWarnings(hierarchy),
   ];

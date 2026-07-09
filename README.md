@@ -9,6 +9,8 @@ VS Code extension for inspecting Verilog HDL/SystemVerilog module hierarchy.
 - Show the instantiated hierarchy in Explorer as `HDL Hierarchy`.
 - Jump from each module or instance node to the corresponding source line.
 - Refresh manually or automatically when source files change.
+- Expand basic `` `include "file.vh" `` directives before parsing.
+- Apply configured `` `ifdef ``/`` `ifndef ``/`` `elsif `` conditionals before parsing.
 - Report duplicate modules, unresolved modules, cycles, and parse summary in the `Verilog Hierarchy` output channel.
 
 ## Build
@@ -73,12 +75,24 @@ code --install-extension .\verilog-hierarchy-viewer-<version>.vsix
 - `verilogHierarchy.exclude`: glob patterns excluded from scanning.
 - `verilogHierarchy.maxDepth`: maximum hierarchy depth.
 - `verilogHierarchy.autoRefresh`: refresh when source files change.
-- `verilogHierarchy.includePaths`: reserved for future preprocessor support.
-- `verilogHierarchy.defines`: reserved for future preprocessor support.
+- `verilogHierarchy.includePaths`: additional include directories for `` `include `` resolution.
+- `verilogHierarchy.defines`: preprocessor define names used for conditional parsing.
+
+Example:
+
+```json
+{
+  "verilogHierarchy.includePaths": ["rtl/include"],
+  "verilogHierarchy.defines": {
+    "USE_FAST_IMPL": true,
+    "SYNTHESIS": true
+  }
+}
+```
 
 ## Current Limitations
 
-- Preprocessor directives and `include` files are not expanded.
-- Macro-generated module or instance names are not resolved.
+- Macro expansion is limited to conditional checks; macro-generated module or instance names are not resolved.
+- Included source locations currently jump to the including source file line after preprocessing.
 - Complex SystemVerilog elaboration is not performed.
 - Multiple instances in one declaration are not fully handled.

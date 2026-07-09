@@ -2,7 +2,7 @@
   "name": "verilog-hierarchy-viewer",
   "displayName": "Verilog Hierarchy Viewer",
   "description": "Inspect Verilog HDL/SystemVerilog module hierarchy from VS Code.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "yoshdroid",
   "license": "MIT",
   "repository": {
@@ -69,12 +69,12 @@
           "items": {
             "type": "string"
           },
-          "description": "Reserved for future include path support."
+          "description": "Additional include directories used when resolving `include files."
         },
         "verilogHierarchy.defines": {
           "type": "object",
           "default": {},
-          "description": "Reserved for future preprocessor define support."
+          "description": "Preprocessor defines used for basic `ifdef/`ifndef/`elsif condition handling."
         },
         "verilogHierarchy.maxDepth": {
           "type": "number",

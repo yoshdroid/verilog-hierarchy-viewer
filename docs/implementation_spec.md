@@ -362,3 +362,60 @@ fail 0
 
 - `picorv32.v` の false positive は解消し、実インスタンスのみ検出されることを確認した。
 - 自動テストは 12 件に増加した。
+
+## 0.0.3 変更履歴
+
+更新日: 2026-07-09
+
+### Basic Preprocessor
+
+ファイル: `src/hierarchy/preprocessor.ts`, `src/hierarchy/indexer.ts`, `src/workspace/workspaceIndexer.ts`
+
+module parse の前段に軽量 preprocessor を追加した。`buildModuleIndexWithWarnings()` は source text を前処理してから `parseModules()` に渡す。
+
+対応:
+
+- `` `include "file.vh" `` と `` `include <file.vh> `` を展開する。
+- `` `define NAME `` を同一 preprocessor run 内の define として記録する。
+- `verilogHierarchy.defines` のキーを事前定義 macro として扱う。
+- `` `ifdef ``, `` `ifndef ``, `` `elsif ``, `` `else ``, `` `endif `` により inactive branch を空行化する。
+- active branch 内の include だけを展開する。
+- include の再帰と最大 include depth 超過を warning にして停止する。
+- 未解決 include と未対応 macro 参照を Output channel warning として出す。
+
+include 解決順:
+
+1. include 元ファイルと同じ directory。
+2. `verilogHierarchy.includePaths` に設定された directory。
+3. workspace 内で basename が一意に一致する file。
+
+制限:
+
+- macro replacement は行わない。`` `WIDTH `` や `` `MODULE_NAME `` のような置換は未対応。
+- include された text の source location は、現時点では include 元 file の preprocessing 後 line に対応する。include 先 file への正確な jump は今後の課題。
+- conditional expression は macro 名の有無だけを見る。`` `ifdef A && B `` のような式評価は未対応。
+- command line define value は真偽のみ扱う。数値や文字列の置換値は hierarchy parse には反映しない。
+
+### Workspace Settings
+
+`package.json` の設定説明を予約扱いから実機能に更新した。
+
+- `verilogHierarchy.includePaths`: include 探索 directory。
+- `verilogHierarchy.defines`: conditional preprocessing に使う define map。
+
+### 0.0.3 Tests
+
+追加テスト:
+
+- `preprocessVerilog keeps the active ifdef branch from configured defines`
+- `preprocessVerilog expands active includes through the resolver`
+- `preprocessVerilog skips includes in inactive conditionals`
+- `buildModuleIndexWithWarnings indexes modules after include and define preprocessing`
+
+0.0.3 実装時点の自動テスト結果:
+
+```text
+tests 16
+pass 16
+fail 0
+```
