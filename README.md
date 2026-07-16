@@ -8,6 +8,7 @@ VS Code extension for inspecting Verilog HDL/SystemVerilog module hierarchy.
 - Select a TOP module from detected module definitions.
 - Select a TOP module from the Explorer file context menu for RTL files.
 - Show the instantiated hierarchy in Explorer as `HDL Hierarchy`.
+- Parse plain and parameterized module instance declarations split across multiple lines.
 - Jump from each module or instance node to the corresponding source line.
 - Refresh manually or automatically when source files change.
 - Expand basic `` `include "file.vh" `` directives before parsing.

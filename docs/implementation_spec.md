@@ -454,3 +454,42 @@ Explorer 上の RTL ファイル右クリックから `Verilog Hierarchy: Select
 
 - `getModuleNamesDeclaredInUri returns sorted modules declared in the selected file`
 - `getModuleNamesDeclaredInUri returns an empty list when the selected file has no modules`
+
+## 0.0.5 変更履歴
+
+更新日: 2026-07-16
+
+### Multiline Instance Parsing
+
+ファイル: `src/hierarchy/parser.ts`, `test/hierarchy.test.ts`
+
+module instance 宣言を行単位の正規表現で判定する方式から、行頭の識別子を起点として空白と改行を越えて宣言を走査する方式へ変更した。
+
+対応内容:
+
+- module 名、parameter override、instance 名、port connection が複数行に分割された宣言を検出する。
+- parameter override と port connection の `()` の対応を追跡する。
+- instance array の `[]` の対応を追跡する。
+- parameter 内の入れ子括弧と quoted string 内の括弧を区別する。
+- instance declaration の source location は module 名が記述された行を指す。
+- 従来の single-line declaration と compact parameterized declaration も同じ走査処理で検出する。
+
+制限:
+
+- 1つの宣言に複数の instance を記述する形式は、引き続き最初の instance のみを対象とする。
+- escaped identifier、macro で生成される module/instance 名、複雑な SystemVerilog elaboration は未対応。
+
+### 0.0.5 Tests
+
+追加テスト:
+
+- `parseModules detects plain and parameterized instances split across lines`
+- `resolveHierarchy follows multiline instances across source files`
+
+0.0.5 実装時点の自動テスト結果:
+
+```text
+tests 20
+pass 20
+fail 0
+```

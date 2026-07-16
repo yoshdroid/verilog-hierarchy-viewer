@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.5] - 2026-07-16
+
+### Fixed
+
+- Parse plain and parameterized module instance declarations split across multiple lines.
+- Handle nested parentheses and quoted strings in parameter overrides while locating an instance declaration.
+- Resolve multiline instance declarations across separate Verilog HDL/SystemVerilog source files.
+
 ## [0.0.4] - 2026-07-09
 
 ### Added

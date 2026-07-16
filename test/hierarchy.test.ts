@@ -85,6 +85,44 @@ endmodule
   );
 });
 
+test('parseModules detects plain and parameterized instances split across lines', () => {
+  const text = `
+module top;
+  plain_child
+    u_plain
+    (
+      .clk(clk)
+    );
+
+  parameterized_child
+    #(
+      .WIDTH(width_for_mode(MODE)),
+      .LABEL("nested ) text")
+    )
+    u_parameterized
+    [1:0]
+    (
+      .clk(clk)
+    );
+endmodule
+`;
+
+  const modules = parseModules(text, 'file:///multiline.sv');
+
+  assert.deepEqual(
+    modules[0].instances.map((instance) => [
+      instance.moduleName,
+      instance.instanceName,
+      instance.parameterized,
+      instance.declaration.line,
+    ]),
+    [
+      ['plain_child', 'u_plain', false, 2],
+      ['parameterized_child', 'u_parameterized', true, 8],
+    ]
+  );
+});
+
 test('buildModuleIndex tracks duplicate module definitions', () => {
   const index = buildModuleIndex([
     { uri: 'file:///a.sv', text: 'module dup; endmodule' },
@@ -123,4 +161,46 @@ endmodule
   assert.equal(hierarchy.children[0].children[0].children[0].cycle, true);
   assert.equal(hierarchy.children[1].unresolved, true);
   assert.equal(hierarchy.children[1].moduleName, 'missing');
+});
+
+test('resolveHierarchy follows multiline instances across source files', () => {
+  const index = buildModuleIndex([
+    {
+      uri: 'file:///rtl/top.v',
+      text: `
+module top;
+  child
+    u_child
+    (
+      .clk(clk)
+    );
+endmodule
+`,
+    },
+    {
+      uri: 'file:///rtl/child.v',
+      text: `
+module child;
+  grandchild #(
+    .WIDTH(32)
+  )
+  u_grandchild (
+    .clk(clk)
+  );
+endmodule
+`,
+    },
+    {
+      uri: 'file:///rtl/grandchild.v',
+      text: 'module grandchild; endmodule',
+    },
+  ]);
+
+  const hierarchy = resolveHierarchy(index, 'top');
+
+  assert.ok(hierarchy);
+  assert.equal(hierarchy.children[0].moduleName, 'child');
+  assert.equal(hierarchy.children[0].declaration.uri, 'file:///rtl/top.v');
+  assert.equal(hierarchy.children[0].children[0].moduleName, 'grandchild');
+  assert.equal(hierarchy.children[0].children[0].declaration.uri, 'file:///rtl/child.v');
 });

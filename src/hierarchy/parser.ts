@@ -6,10 +6,6 @@ type CommentMaskState = {
 
 const MODULE_DECLARATION_PATTERN = /\bmodule\s+([A-Za-z_][A-Za-z0-9_$]*)\b/g;
 const END_MODULE_PATTERN = /\bendmodule\b/g;
-const PARAMETERIZED_INSTANCE_DECLARATION_PATTERN =
-  /^\s*([A-Za-z_][A-Za-z0-9_$]*)\s*#\s*\((?:[^()]|\([^()]*\))*\)\s*([A-Za-z_][A-Za-z0-9_$]*)\s*(?:\[[^\]]+\]\s*)?\(/;
-const PLAIN_INSTANCE_DECLARATION_PATTERN =
-  /^\s*([A-Za-z_][A-Za-z0-9_$]*)\s+([A-Za-z_][A-Za-z0-9_$]*)\s*(?:\[[^\]]+\]\s*)?\(/;
 
 const NON_INSTANCE_KEYWORDS = new Set([
   'assign',
@@ -156,54 +152,158 @@ function findModuleRanges(text: string, uri: string) {
 
 function parseInstances(body: string, uri: string, fullText: string, bodyOffset: number): ModuleInstance[] {
   const instances: ModuleInstance[] = [];
-  const lines = body.split(/\r?\n/);
-  let offset = bodyOffset;
-
-  for (const line of lines) {
-    const parsed = parseInstanceLine(line);
+  for (const candidateOffset of findLineContentOffsets(body)) {
+    const parsed = parseInstanceAt(body, candidateOffset);
     if (parsed && !NON_INSTANCE_KEYWORDS.has(parsed.moduleName)) {
       instances.push({
         moduleName: parsed.moduleName,
         instanceName: parsed.instanceName,
-        declaration: offsetToLocation(fullText, uri, offset + parsed.moduleOffset),
+        declaration: offsetToLocation(fullText, uri, bodyOffset + candidateOffset),
         parameterized: parsed.parameterized,
       });
     }
-    offset += line.length + 1;
   }
 
   return instances;
 }
 
-function parseInstanceLine(line: string):
+function parseInstanceAt(text: string, start: number):
   | {
       moduleName: string;
       instanceName: string;
-      moduleOffset: number;
       parameterized: boolean;
     }
   | undefined {
-  const parameterizedMatch = PARAMETERIZED_INSTANCE_DECLARATION_PATTERN.exec(line);
-  if (parameterizedMatch) {
-    return {
-      moduleName: parameterizedMatch[1],
-      instanceName: parameterizedMatch[2],
-      moduleOffset: parameterizedMatch.index + line.indexOf(parameterizedMatch[1]),
-      parameterized: true,
-    };
+  const moduleName = readIdentifier(text, start);
+  if (!moduleName) {
+    return undefined;
   }
 
-  const plainMatch = PLAIN_INSTANCE_DECLARATION_PATTERN.exec(line);
-  if (!plainMatch) {
+  let cursor = skipWhitespace(text, moduleName.end);
+  let parameterized = false;
+  if (text[cursor] === '#') {
+    parameterized = true;
+    cursor = skipWhitespace(text, cursor + 1);
+    const parameterEnd = consumeBalanced(text, cursor, '(', ')');
+    if (parameterEnd === undefined) {
+      return undefined;
+    }
+    cursor = skipWhitespace(text, parameterEnd);
+  }
+
+  const instanceName = readIdentifier(text, cursor);
+  if (!instanceName) {
+    return undefined;
+  }
+  cursor = skipWhitespace(text, instanceName.end);
+
+  while (text[cursor] === '[') {
+    const dimensionEnd = consumeBalanced(text, cursor, '[', ']');
+    if (dimensionEnd === undefined) {
+      return undefined;
+    }
+    cursor = skipWhitespace(text, dimensionEnd);
+  }
+
+  if (consumeBalanced(text, cursor, '(', ')') === undefined) {
     return undefined;
   }
 
   return {
-    moduleName: plainMatch[1],
-    instanceName: plainMatch[2],
-    moduleOffset: plainMatch.index + line.indexOf(plainMatch[1]),
-    parameterized: false,
+    moduleName: moduleName.value,
+    instanceName: instanceName.value,
+    parameterized,
   };
+}
+
+function findLineContentOffsets(text: string): number[] {
+  const offsets: number[] = [];
+  let lineStart = 0;
+
+  while (lineStart < text.length) {
+    let contentStart = lineStart;
+    while (text[contentStart] === ' ' || text[contentStart] === '\t' || text[contentStart] === '\r') {
+      contentStart += 1;
+    }
+    if (isIdentifierStart(text[contentStart])) {
+      offsets.push(contentStart);
+    }
+
+    const newline = text.indexOf('\n', lineStart);
+    if (newline === -1) {
+      break;
+    }
+    lineStart = newline + 1;
+  }
+
+  return offsets;
+}
+
+function readIdentifier(text: string, start: number): { value: string; end: number } | undefined {
+  if (!isIdentifierStart(text[start])) {
+    return undefined;
+  }
+
+  let end = start + 1;
+  while (isIdentifierPart(text[end])) {
+    end += 1;
+  }
+  return { value: text.slice(start, end), end };
+}
+
+function isIdentifierStart(character: string | undefined): boolean {
+  return character !== undefined && /[A-Za-z_]/.test(character);
+}
+
+function isIdentifierPart(character: string | undefined): boolean {
+  return character !== undefined && /[A-Za-z0-9_$]/.test(character);
+}
+
+function skipWhitespace(text: string, start: number): number {
+  let cursor = start;
+  while (/\s/.test(text[cursor] ?? '')) {
+    cursor += 1;
+  }
+  return cursor;
+}
+
+function consumeBalanced(
+  text: string,
+  start: number,
+  opening: '(' | '[',
+  closing: ')' | ']'
+): number | undefined {
+  if (text[start] !== opening) {
+    return undefined;
+  }
+
+  let depth = 0;
+  let inString = false;
+  for (let cursor = start; cursor < text.length; cursor += 1) {
+    const character = text[cursor];
+    if (inString) {
+      if (character === '\\') {
+        cursor += 1;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (character === '"') {
+      inString = true;
+      continue;
+    }
+    if (character === opening) {
+      depth += 1;
+    } else if (character === closing) {
+      depth -= 1;
+      if (depth === 0) {
+        return cursor + 1;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 function offsetToLocation(text: string, uri: string, offset: number): SourceLocation {
